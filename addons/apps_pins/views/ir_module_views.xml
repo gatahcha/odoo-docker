@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Default Apps to Pinned search panel. Upgrade module + restart Odoo. Empty until user pins or switches sidebar. -->
+    <record id="base.open_module_tree" model="ir.actions.act_window">
+        <field name="context">{'search_default_app': 1, 'searchpanel_default_module_type': 'pinned'}</field>
+    </record>
+
+    <record id="module_tree_apps_pins" model="ir.ui.view">
+        <field name="name">Apps list pin column</field>
+        <field name="model">ir.module.module</field>
+        <field name="inherit_id" ref="base_import_module.module_tree_apps_inherit"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="is_pinned" widget="apps_pin" string=" " optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="module_kanban_apps_pins" model="ir.ui.view">
+        <field name="name">Apps kanban pin + menu</field>
+        <field name="model">ir.module.module</field>
+        <field name="inherit_id" ref="base_import_module.module_view_kanban_apps_inherit"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='application']" position="after">
+                <field name="is_pinned" invisible="1"/>
+            </xpath>
+            <xpath expr="//t[@t-name='menu']" position="inside">
+                <a type="object" name="action_apps_toggle_pin" class="dropdown-item" role="menuitem"
+                   context="{'module_name': name}" groups="base.group_system">Toggle pin</a>
+            </xpath>
+            <!-- cardClassName is merged onto the Kanban article; position pin top-end beside ⋮ (sibling menu). -->
+            <xpath expr="//t[@t-name='card']" position="attributes">
+                <attribute name="class">flex-row align-items-center position-relative</attribute>
+            </xpath>
+            <xpath expr="//t[@t-name='card']/main" position="after">
+                <button type="object" name="action_apps_toggle_pin" title="Pin" groups="base.group_system"
+                        context="{'module_name': name}"
+                        t-attf-class="oe_kanban_action o_apps_pins_kanban_pin btn btn-link p-0 border-0 {{ record.is_pinned.raw_value ? 'o_apps_pins_kanban_pin--pinned' : 'o_apps_pins_kanban_pin--unpinned' }}">
+                    <i class="fa fa-thumb-tack" role="img" aria-label="Pin"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+</odoo>

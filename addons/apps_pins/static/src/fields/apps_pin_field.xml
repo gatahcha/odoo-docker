@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="apps_pins.AppsPinField">
+        <button type="button"
+                class="o_apps_pin_btn"
+                t-att-class="cssClass"
+                t-att-title="title"
+                t-on-click="onClick"
+                tabindex="-1">
+            <i class="fa fa-thumb-tack"/>
+        </button>
+    </t>
+</templates>

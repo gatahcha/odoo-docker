@@ -1,0 +1,44 @@
+.o_apps_pin_btn {
+    border: none;
+    background: transparent;
+    padding: 0 4px;
+    cursor: pointer;
+    line-height: 1;
+
+    &.o_apps_pin_btn--pinned {
+        color: #5b21b6;
+    }
+
+    &.o_apps_pin_btn--unpinned {
+        color: #d1d5db;
+    }
+
+    &:hover {
+        filter: brightness(1.15);
+    }
+}
+
+/* Pin sits on the Kanban article (same containing block as web.KanbanRecordMenu ⋮). */
+.o_kanban_view.o_modules_kanban .o_kanban_renderer .o_kanban_record.position-relative .o_apps_pins_kanban_pin {
+    position: absolute;
+    top: 0;
+    /* Leave room for .o_dropdown_kanban (ellipsis) at end-0 top-0 (~1.75rem). */
+    inset-inline-end: 1.75rem;
+    z-index: 2;
+    font-size: 1rem;
+    line-height: 1;
+    padding-top: 2px !important;
+    text-decoration: none !important;
+}
+
+.o_kanban_view.o_modules_kanban .o_kanban_renderer .o_kanban_record .o_apps_pins_kanban_pin--pinned {
+    color: #5b21b6;
+}
+
+.o_kanban_view.o_modules_kanban .o_kanban_renderer .o_kanban_record .o_apps_pins_kanban_pin--unpinned {
+    color: #d1d5db;
+}
+
+.o_kanban_view.o_modules_kanban .o_kanban_renderer .o_kanban_record .o_apps_pins_kanban_pin:hover {
+    filter: brightness(1.12);
+}

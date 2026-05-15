@@ -1,0 +1,59 @@
+---
+description: Odoo Docker project architecture and safe-change guide
+alwaysApply: true
+---
+
+# Odoo Docker Architecture
+
+This project runs a local Odoo source checkout in Docker. Treat `odoo/` as upstream Odoo framework code unless the user explicitly asks to patch core behavior. Prefer custom work in `addons/` so upgrades remain manageable.
+
+## Runtime Layout
+
+- `docker-compose.yml` starts two services: `db` using PostgreSQL 15 and `odoo` built from the local `Dockerfile`.
+- `Dockerfile` copies `odoo/` into `/opt/odoo/odoo`, installs Python requirements, and starts `python odoo-bin -c /etc/odoo/odoo.conf`.
+- `config/odoo.conf` sets `addons_path = /opt/odoo/odoo/addons,/mnt/extra-addons`; the second path is the mounted project `addons/` directory for custom modules.
+- `docker-entrypoint.sh` is the container entrypoint. Keep it minimal unless changing startup behavior.
+- `.env` contains local database credentials. Do not print or commit secrets.
+
+## Backend Architecture
+
+- Odoo modules live under `odoo/addons/<module>/` for upstream modules and `addons/<module>/` for custom modules.
+- Each module is declared by `__manifest__.py`; dependencies, data files, and frontend assets are loaded from there.
+- Python models live in `models/`, HTTP controllers in `controllers/`, security rules in `security/`, XML views/actions/menus in `views/`, reports in `report/`, and demo/data records in `data/`.
+- ORM models inherit from `models.Model`, `models.TransientModel`, or `models.AbstractModel`. Use Odoo APIs (`fields`, `api.depends`, `api.model`, recordsets) instead of direct SQL unless there is a clear performance reason.
+- Access is governed by `security/ir.model.access.csv`, record rules, and groups. When adding models, add access rules intentionally.
+
+## Frontend Architecture
+
+- The core web client is in `odoo/addons/web/`.
+- `odoo/addons/web/__manifest__.py` defines asset bundles such as `web.assets_backend`, `web.assets_web`, `web.assets_frontend`, and lazy bundles.
+- `odoo/addons/web/static/src/main.js` starts the web client; `start.js` mounts the OWL app; `webclient/webclient.js` is the main client component; `webclient/webclient.xml` is the shell template.
+- Module frontend code usually lives in `static/src/**/*.js`, `static/src/**/*.xml`, and `static/src/**/*.scss`, then is included through the module manifest `assets` key.
+- Backend UI screens are mostly XML views (`views/*.xml`) rendered by the Odoo web client. Website/portal pages use QWeb templates and frontend bundles.
+
+## Apps, Community, and Enterprise Flags
+
+- `odoo/odoo/addons/base/models/ir_module.py` defines module metadata, including `license` and `to_buy`.
+- `odoo/odoo/addons/base/data/ir_module_module.xml` contains Enterprise app placeholder records with `license` set to `OEEL-1` and `to_buy=True`.
+- `odoo/odoo/addons/base/views/ir_module_views.xml` uses `to_buy` to show `Upgrade` instead of `Activate` in Apps.
+- Changing `to_buy` only changes UI/install behavior; it does not provide missing Enterprise source code or license entitlement.
+- Community modules generally use `license: LGPL-3` in `__manifest__.py`.
+
+## Safe Change Guidance
+
+- Prefer creating or modifying custom modules under `addons/` instead of editing `odoo/` core. Patch core only when necessary and keep changes small.
+- When changing a module, update its `__manifest__.py` data/assets lists if new XML, JS, SCSS, security, or data files must load.
+- For frontend changes, verify the correct asset bundle is used. Backend web-client code belongs in `web.assets_backend`; public website code belongs in frontend bundles.
+- For XML views, use inheritance with stable `xpath` targets where possible rather than replacing whole upstream views.
+- For installed module changes, remember Odoo may require module upgrade (`-u module_name`) or asset reload before changes appear.
+- Do not bypass licensing or fake Enterprise availability. If the Enterprise addon source is absent, installing the placeholder module will not unlock the feature.
+
+## Useful Local Paths
+
+- Core server: `odoo/odoo/`
+- Upstream addons: `odoo/addons/`
+- Custom addons mount: `addons/`
+- Web client: `odoo/addons/web/`
+- Apps UI: `odoo/odoo/addons/base/views/ir_module_views.xml`
+- Enterprise placeholders: `odoo/odoo/addons/base/data/ir_module_module.xml`
+- Odoo config: `config/odoo.conf`
