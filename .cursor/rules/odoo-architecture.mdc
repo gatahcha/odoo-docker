@@ -11,7 +11,8 @@ This project runs a local Odoo source checkout in Docker. Treat `odoo/` as upstr
 
 - `docker-compose.yml` starts two services: `db` using PostgreSQL 15 and `odoo` built from the local `Dockerfile`.
 - `Dockerfile` copies `odoo/` into `/opt/odoo/odoo`, installs Python requirements, and starts `python odoo-bin -c /etc/odoo/odoo.conf`.
-- `config/odoo.conf` sets `addons_path = /opt/odoo/odoo/addons,/mnt/extra-addons`; the second path is the mounted project `addons/` directory for custom modules.
+- `config/odoo.conf` sets `addons_path` (see file on disk); **`/mnt/extra-addons`** is the mounted project `addons/` directory for custom modules. The image may use a different core path than `./odoo` on the host; trust the log line **“addons paths:”** at startup.
+- `config/odoo.conf` may set **`workers` > 0** for production-like mode. Multi-worker processes cache registry and web behavior longer than a single process; after DB-changing steps, prefer **`docker compose restart odoo`** so all workers reload.
 - `docker-entrypoint.sh` is the container entrypoint. Keep it minimal unless changing startup behavior.
 - `.env` contains local database credentials. Do not print or commit secrets.
 
@@ -47,6 +48,51 @@ This project runs a local Odoo source checkout in Docker. Treat `odoo/` as upstr
 - For XML views, use inheritance with stable `xpath` targets where possible rather than replacing whole upstream views.
 - For installed module changes, remember Odoo may require module upgrade (`-u module_name`) or asset reload before changes appear.
 - Do not bypass licensing or fake Enterprise availability. If the Enterprise addon source is absent, installing the placeholder module will not unlock the feature.
+
+## Custom modules: `apps_pins` and `web_apps_home`
+
+- **`addons/apps_pins`** extends `ir.module.module` (pins in `ir.config_parameter` per user, My Adds = application modules on extra addons roots, Apps action defaults to All). It depends on **`web_apps_home`** for the `/odoo` fullscreen launcher.
+- **`addons/web_apps_home`** registers client action **`web_apps_home.main`** (OWL template `web_apps_home.AppsHome`): welcome line, user chip, top bar app switcher, and `menuService.getApps()` (or subclass override) for the grid. It is the default home when the user has **no Home Action**.
+- **`apps_pins`** adds `apps_pins_home_menu_ids` in `session_info` (via `ir.http`) and re-registers **`web_apps_home.main`** with `{ force: true }` using a subclass of **`AppsHome`** (same XML template, **`getAppsForHome()`** overridden for pin order). Navbar app menu is unchanged. When changing pin/home behavior, trace **both** `ir.module.module` / Apps UI **and** `session_info` + **`web_apps_home`** / **`apps_pins`** assets.
+- **Validating `/odoo`**: If the user set **Preferences → Home Action**, `/odoo` may open that app instead of the Apps Home client action—clear Home Action to test the launcher, or know you are not on that screen.
+- After changing launcher JS/XML/SCSS or either module’s Python/XML, **upgrade both** `web_apps_home` and `apps_pins` when in doubt, then follow **Applying changes in Docker** below (including **restart** when workers are enabled).
+
+## Applying changes in Docker
+
+Use this when you pull or edit custom addons and need the running instance to match.
+
+**Database name:** This workspace defaults to **`TEST1`** (`POSTGRES_DB` in `.env`, `db_name` in `config/odoo.conf`). Use **`-d TEST1`** in `odoo-bin` examples so upgrades match the DB in the browser (`?db=TEST1` if relevant). If your Postgres volume was created with another name, create **`TEST1`** in Odoo / Postgres or align `.env` with the database you actually use.
+
+**`compose run` vs long-running `odoo`:** `docker compose run --rm odoo … --stop-after-init` starts a **one-off** container, upgrades the DB, then exits. The **`docker compose up`** Odoo service keeps running with **its own worker processes** until restarted. After any `-u` that must show in the browser, run **`docker compose restart odoo`** (especially when **`workers` > 0**). A browser hard refresh alone does not replace that.
+
+**Port conflict:** `docker compose exec odoo python odoo-bin …` while the main Odoo is already bound to **8069** can fail with “address already in use”. Prefer a **one-off upgrade**:
+
+`docker compose run --rm odoo python odoo-bin -c /etc/odoo/odoo.conf -d TEST1 -u web_apps_home,apps_pins --stop-after-init`
+
+then **`docker compose restart odoo`**. Alternatively use a free **`--http-port`** (e.g. `8077`) on a second `odoo-bin` if you must use `exec`.
+
+1. **Rebuild the image** (only if `Dockerfile`, `requirements`, or non-mounted build context changed):  
+   `docker compose build odoo` then `docker compose up -d odoo`
+
+2. **Upgrade the module(s)** (applies XML data, manifest deps, regenerates asset attachments, reloads registry for that process—**required** for most Python/view/asset manifest changes):  
+   One-off (recommended):  
+   `docker compose run --rm odoo python odoo-bin -c /etc/odoo/odoo.conf -d TEST1 -u web_apps_home,apps_pins --stop-after-init`  
+   Include **`web_apps_home`** whenever launcher XML/JS/SCSS changed; include **`apps_pins`** when that module changed.
+
+3. **Restart the long-running Odoo service** after upgrades so all workers and clients see the same registry and assets:  
+   `docker compose restart odoo`
+
+4. **Quick try without `-u`** (Python-only edits sometimes):  
+   `docker compose restart odoo` may be enough; if the UI is still wrong, run step 2.
+
+5. **Backend / web client tests** (optional):  
+   `docker compose run --rm odoo python odoo-bin -c /etc/odoo/odoo.conf -d TEST1 --test-enable --stop-after-init -u apps_pins --test-tags apps_pins --http-port=8077`
+
+6. **Browser**: hard refresh helps client cache only. If **`web.assets_backend`** still looks stale after `-u` + restart, open once with **`?debug=assets`**, or enable **Developer mode** and **Regenerate Asset Bundles**.
+
+## Cursor rules in this repo
+
+- Workspace rules live under **`.cursor/rules/`** (e.g. `odoo-architecture.mdc`). Files with `alwaysApply: true` are included automatically for agents in this project; you do **not** copy them into Odoo. After editing a rule file, **save** it; if the editor seems stuck on old wording, use **Developer: Reload Window** once. No Docker step is required for rule text alone.
 
 ## Useful Local Paths
 

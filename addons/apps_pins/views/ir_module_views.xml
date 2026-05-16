@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Default Apps to Pinned search panel. Upgrade module + restart Odoo. Empty until user pins or switches sidebar. -->
+    <!-- Apps: All in search panel (false); URL-restored state is reset in JS for this action. -->
     <record id="base.open_module_tree" model="ir.actions.act_window">
-        <field name="context">{'search_default_app': 1, 'searchpanel_default_module_type': 'pinned'}</field>
+        <field name="context">{'search_default_app': 1, 'searchpanel_default_module_type': False}</field>
     </record>
 
     <record id="module_tree_apps_pins" model="ir.ui.view">
@@ -35,7 +35,7 @@
             <xpath expr="//t[@t-name='card']/main" position="after">
                 <button type="object" name="action_apps_toggle_pin" title="Pin" groups="base.group_system"
                         context="{'module_name': name}"
-                        t-attf-class="oe_kanban_action o_apps_pins_kanban_pin btn btn-link p-0 border-0 {{ record.is_pinned.raw_value ? 'o_apps_pins_kanban_pin--pinned' : 'o_apps_pins_kanban_pin--unpinned' }}">
+                        t-attf-class="oe_kanban_action o_apps_pins_kanban_pin btn o-no-caret rounded-0 px-1 dropdown-toggle {{ record.is_pinned.raw_value ? 'o_apps_pins_kanban_pin--pinned' : 'o_apps_pins_kanban_pin--unpinned' }}">
                     <i class="fa fa-thumb-tack" role="img" aria-label="Pin"/>
                 </button>
             </xpath>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="backend_theme_studio.ThemeSystrayItem">
+        <div class="o_menu_systray_item d-flex align-items-center" title="Theme customizer">
+            <button
+                type="button"
+                class="bts-systray-btn py-2 px-2 rounded-0"
+                t-on-click.stop="onClick"
+                aria-label="Theme customizer"
+            >
+                <i class="fa fa-paint-brush fa-lg"/>
+            </button>
+        </div>
+    </t>
+</templates>

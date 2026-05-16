@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_client_apps_home" model="ir.actions.client">
+        <field name="name">Apps Home</field>
+        <field name="tag">web_apps_home.main</field>
+        <field name="target">fullscreen</field>
+    </record>
+</odoo>

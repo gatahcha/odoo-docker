@@ -1,0 +1,87 @@
+.o_web_apps_home {
+    min-height: 100%;
+    background: linear-gradient(135deg, #e8e0f5 0%, #dce8f8 45%, #f0e8f8 100%);
+}
+
+.o_web_apps_home_topbar {
+    flex: 0 0 auto;
+    z-index: 1;
+    background-color: transparent !important;
+}
+
+.o_web_apps_home_apps_btn {
+    color: var(--o-navbar-text-color, #714b67);
+
+    &:hover,
+    &:focus-visible {
+        color: var(--o-navbar-text-color, #5a3a52);
+        background-color: rgba(0, 0, 0, 0.04);
+    }
+
+    .oi,
+    .fa {
+        vertical-align: middle;
+    }
+}
+
+.o_web_apps_home_user_name {
+    max-width: 12rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.o_web_apps_home_avatar {
+    width: 2rem;
+    height: 2rem;
+    object-fit: cover;
+}
+
+.o_web_apps_home_main {
+    min-height: 0;
+}
+
+.o_web_apps_home_welcome {
+    font-size: clamp(1.35rem, 2.5vw, 2rem);
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    line-height: 1.25;
+    margin-bottom: 0;
+    background: linear-gradient(120deg, #4c1d95 0%, #1d4ed8 45%, #0f766e 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 2px 18px rgba(29, 78, 216, 0.15);
+}
+
+.o_web_apps_home_grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+    gap: 1.25rem 1rem;
+    max-width: 56rem;
+}
+
+.o_web_apps_home_app {
+    cursor: pointer;
+    border-radius: 0.75rem;
+    padding: 0.75rem 0.5rem;
+    transition: background-color 0.15s ease, transform 0.15s ease;
+
+    &:hover,
+    &:focus-visible {
+        background-color: rgba(255, 255, 255, 0.55);
+        transform: translateY(-2px);
+    }
+
+    &:focus-visible {
+        outline: 2px solid #714b67;
+        outline-offset: 2px;
+    }
+}
+
+.o_web_apps_home_icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 0.5rem;
+    object-fit: contain;
+}

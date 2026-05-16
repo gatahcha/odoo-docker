@@ -71,10 +71,10 @@ Then open **http://localhost:8069** in a browser, create a database (or use an e
 
 - **Logs:** `docker compose logs -f odoo` (or `db`).
 - **Stop:** `docker compose down` (add `-v` only if you intend to remove named volumes and data).
-- **Upgrade a custom module** (example `apps_pins`, replace `YOUR_DB`):
+- **Upgrade a custom module** (example `apps_pins`, database **`TEST1`**):
 
   ```bash
-  docker compose exec odoo python odoo-bin -c /etc/odoo/odoo.conf -d YOUR_DB -u apps_pins --stop-after-init
+  docker compose exec odoo python odoo-bin -c /etc/odoo/odoo.conf -d TEST1 -u apps_pins --stop-after-init
   ```
 
   Then restart the Odoo service if needed: `docker compose restart odoo`.

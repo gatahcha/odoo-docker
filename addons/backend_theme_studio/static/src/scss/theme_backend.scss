@@ -1,0 +1,188 @@
+// Backend Theme Studio — variable-driven glass look (Odoo 19 backend)
+// Only applies when body has .bts-enabled (set by theme_customizer_service).
+//
+// Use unquote() for rgba(..., var(...)) so Sass does not try to evaluate rgba() at compile time.
+
+html[data-bts-mode="light"] {
+    /* Soft blue surfaces (readable on white text areas) */
+    --bts-nav-solid: unquote("rgba(214, 230, 255, var(--bts-nav-alpha, 0.94))");
+    --bts-sidebar-solid: unquote("rgba(204, 224, 255, var(--bts-sidebar-alpha, 0.9))");
+    --bts-action-solid: unquote("rgba(226, 238, 255, var(--bts-action-alpha, 0.93))");
+    --bts-body-solid: unquote("rgba(220, 235, 255, var(--bts-body-alpha, 0.95))");
+    --bts-cp-solid: var(--bts-action-solid);
+}
+
+html[data-bts-mode="dark"] {
+    --bts-nav-solid: unquote("rgba(35, 38, 48, var(--bts-nav-alpha, 0.82))");
+    --bts-sidebar-solid: unquote("rgba(28, 30, 38, var(--bts-sidebar-alpha, 0.78))");
+    --bts-action-solid: unquote("rgba(32, 35, 45, var(--bts-action-alpha, 0.85))");
+    --bts-body-solid: unquote("rgba(24, 26, 32, var(--bts-body-alpha, 0.88))");
+    --bts-cp-solid: var(--bts-action-solid);
+}
+
+body.o_web_client.bts-enabled {
+    background-color: transparent;
+    background-image: var(--bts-bg-image, none);
+    background-size: cover;
+    background-position: center center;
+    background-attachment: fixed;
+
+    &::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        background: unquote("rgba(0, 0, 0, var(--bts-bg-dim, 0.25))");
+    }
+
+    > .o_navbar,
+    > .o_action_manager {
+        position: relative;
+        z-index: 1;
+    }
+
+    .o_action_manager {
+        background-color: transparent !important;
+    }
+
+    .o_action_manager .o_action {
+        background-color: var(--bts-action-solid);
+        backdrop-filter: unquote("blur(var(--bts-blur, 12px))");
+        -webkit-backdrop-filter: unquote("blur(var(--bts-blur, 12px))");
+    }
+
+    .o_control_panel {
+        background-color: var(--bts-cp-solid) !important;
+        backdrop-filter: unquote("blur(var(--bts-blur, 12px))");
+        -webkit-backdrop-filter: unquote("blur(var(--bts-blur, 12px))");
+    }
+
+    .o_content {
+        background-color: var(--bts-body-solid) !important;
+    }
+
+    .o_burger_menu .offcanvas,
+    .o_burger_menu .o_burger_menu_content {
+        background-color: var(--bts-sidebar-solid) !important;
+        backdrop-filter: unquote("blur(var(--bts-blur, 12px))");
+        -webkit-backdrop-filter: unquote("blur(var(--bts-blur, 12px))");
+    }
+}
+
+html[data-bts-mode="light"] body.o_web_client.bts-enabled .o_main_navbar {
+    background: unquote(
+        "linear-gradient(90deg, rgba(47, 104, 201, 0.96), rgba(64, 130, 220, 0.92))"
+    ) !important;
+    color: #fff;
+    backdrop-filter: unquote("blur(var(--bts-blur, 12px))");
+    -webkit-backdrop-filter: unquote("blur(var(--bts-blur, 12px))");
+
+    .text-muted,
+    .o_menu_brand,
+    .dropdown-toggle,
+    .o_nav_entry {
+        color: rgba(255, 255, 255, 0.92) !important;
+    }
+
+    .o_menu_systray .bts-systray-btn {
+        color: #fff;
+    }
+}
+
+html[data-bts-mode="dark"] body.o_web_client.bts-enabled .o_main_navbar {
+    background-color: var(--bts-nav-solid) !important;
+    backdrop-filter: unquote("blur(var(--bts-blur, 12px))");
+    -webkit-backdrop-filter: unquote("blur(var(--bts-blur, 12px))");
+}
+
+// Root wrapper from OWL: never block clicks when the panel is closed.
+.o_bts_root {
+    pointer-events: none;
+}
+
+.bts-theme-panel,
+.bts-theme-panel-backdrop {
+    pointer-events: auto;
+}
+
+// Panel lives outside body.o_web_client in the DOM; keep rules at root.
+.bts-theme-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    // Avoid Sass built-in min() fighting with CSS min(100vw, 380px)
+    width: 100vw;
+    max-width: 380px;
+    z-index: 1200;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+
+    html[data-bts-mode="light"] & {
+        background: #fff;
+        color: #1b1f24;
+    }
+
+    html[data-bts-mode="dark"] & {
+        background: #1e2128;
+        color: #e8eaed;
+    }
+}
+
+.bts-theme-panel-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1199;
+    background: rgba(0, 0, 0, 0.15);
+}
+
+@media (min-width: 768px) {
+    .bts-theme-panel-backdrop {
+        display: none;
+    }
+}
+
+.bts-preset-swatch {
+    width: 52px;
+    height: 36px;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+
+    &.active {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.35);
+    }
+}
+
+.bts-section-toggle {
+    width: 100%;
+    text-align: left;
+    border: 0;
+    background: transparent;
+    padding: 0.5rem 0;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+html[data-bts-mode="dark"] .bts-section-toggle {
+    color: #e8eaed;
+}
+
+.bts-systray-btn {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    padding: 0 0.5rem;
+    line-height: 1;
+
+    &:hover {
+        opacity: 0.85;
+    }
+}

@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="backend_theme_studio.ThemeCustomizer">
+        <div class="o_bts_root">
+            <div
+                t-if="state.panelOpen and ui.isSmall"
+                class="bts-theme-panel-backdrop"
+                t-on-click="() => this.close()"
+            />
+            <div t-if="state.panelOpen" class="bts-theme-panel border-start">
+                <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0 text-uppercase small fw-bold">Theme customizer</h5>
+                    <button type="button" t-att-class="closeBtnClass" title="Close" t-on-click="() => this.close()"/>
+                </div>
+                <div class="flex-grow-1 overflow-auto p-3">
+                    <div class="mb-3">
+                        <label class="form-label small text-muted mb-1">Mode</label>
+                        <div class="btn-group w-100" role="group">
+                            <button
+                                type="button"
+                                class="btn btn-sm"
+                                t-att-class="state.mode === 'light' ? 'btn-primary' : 'btn-outline-secondary'"
+                                t-on-click="() => this.setMode('light')"
+                            >Light</button>
+                            <button
+                                type="button"
+                                class="btn btn-sm"
+                                t-att-class="state.mode === 'dark' ? 'btn-primary' : 'btn-outline-secondary'"
+                                t-on-click="() => this.setMode('dark')"
+                            >Dark</button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted mb-1">Presets</label>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <t t-foreach="presets" t-as="p" t-key="p.id">
+                                <button
+                                    type="button"
+                                    t-att-class="presetClass(p)"
+                                    t-att-title="p.name"
+                                    t-att-style="presetStyle(p)"
+                                    t-on-click="() => this.applyPreset(p.id)"
+                                />
+                            </t>
+                        </div>
+                    </div>
+                    <div class="mb-3 border-bottom pb-3">
+                        <label class="form-label small text-muted mb-1">App home (Web Apps Home)</label>
+                        <p class="small text-muted mb-2">
+                            When enabled and you have no personal Home Action, opening <code class="small">/odoo</code> shows the installed-apps screen instead of the first menu app.
+                        </p>
+                        <p t-if="appsHome.canEdit and !appsHome.loaded" class="small text-muted mb-2">Loading…</p>
+                        <div t-if="appsHome.canEdit and appsHome.loaded" class="form-check">
+                            <input
+                                type="checkbox"
+                                class="form-check-input"
+                                id="bts_web_apps_home_enabled"
+                                t-att-checked="appsHome.enabled"
+                                t-on-change="(ev) => this.onWebAppsHomeToggle(ev)"
+                            />
+                            <label class="form-check-label small" for="bts_web_apps_home_enabled">
+                                Enable apps grid on bare /odoo
+                            </label>
+                        </div>
+                        <p t-elif="!appsHome.canEdit" class="small text-muted mb-0">
+                            Only <strong>Settings</strong> users can change this toggle; others use Technical → Parameters → <code class="small">web_apps_home.enabled</code>.
+                        </p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted mb-1">Background image URL</label>
+                        <input
+                            type="text"
+                            class="form-control form-control-sm"
+                            placeholder="https://…"
+                            t-att-value="state.bgUrl"
+                            t-on-input="(ev) => this.onBgUrl(ev)"
+                        />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small text-muted mb-1">Background dim</label>
+                        <input
+                            type="range"
+                            class="form-range"
+                            min="0"
+                            max="1"
+                            step="0.05"
+                            t-att-value="state.bgDim"
+                            t-on-input="(ev) => this.patch({ bgDim: parseFloat(ev.target.value) })"
+                        />
+                    </div>
+
+                    <div class="border-top pt-2 mt-2">
+                        <t t-foreach="sections" t-as="sec" t-key="sec.id">
+                            <div class="border-bottom py-1">
+                                <button
+                                    type="button"
+                                    class="bts-section-toggle"
+                                    t-on-click="() => this.toggleSection(sec.id)"
+                                >
+                                    <span t-esc="sec.label"/>
+                                    <i t-att-class="openSection === sec.id ? 'fa fa-chevron-up' : 'fa fa-chevron-down'"/>
+                                </button>
+                                <div t-if="openSection === sec.id" class="pb-2">
+                                    <t t-foreach="sec.fields" t-as="fld" t-key="fld.key">
+                                        <label class="form-label small mb-0" t-esc="fld.label"/>
+                                        <input
+                                            type="range"
+                                            class="form-range"
+                                            min="0"
+                                            max="1"
+                                            step="0.02"
+                                            t-att-value="state[fld.key]"
+                                            t-on-input="(ev) => this.onFieldInput(fld.key, ev)"
+                                        />
+                                    </t>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label small text-muted mb-1">Blur (px)</label>
+                        <input
+                            type="range"
+                            class="form-range"
+                            min="0"
+                            max="32"
+                            step="1"
+                            t-att-value="state.blurPx"
+                            t-on-input="(ev) => this.patch({ blurPx: parseInt(ev.target.value, 10) })"
+                        />
+                    </div>
+                </div>
+                <div class="p-3 border-top d-flex gap-2 mt-auto">
+                    <button type="button" class="btn btn-outline-secondary btn-sm flex-grow-1" t-on-click="preview">
+                        Preview
+                    </button>
+                    <button type="button" class="btn btn-outline-warning btn-sm flex-grow-1" t-on-click="reset">
+                        Reset
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm flex-grow-1" t-on-click="save">
+                        Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

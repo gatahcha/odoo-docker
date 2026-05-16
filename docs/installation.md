@@ -29,7 +29,7 @@ cp .example.env .env
 
 Set at least:
 
-- `POSTGRES_DB` — database name Postgres will create (for example `odoo`).
+- `POSTGRES_DB` — database name Postgres will create (this repo defaults to **`TEST1`**).
 - `POSTGRES_USER` — database role (for example `odoo`).
 - `POSTGRES_PASSWORD` — a strong password.
 
@@ -89,10 +89,10 @@ Filestore lives in the `odoo-data` volume. The entrypoint ensures `/var/lib/odoo
 
 ### Module changes not visible
 
-After pulling code changes for a custom module, upgrade it (replace `YOUR_DB`):
+After pulling code changes for a custom module, upgrade it (database **`TEST1`**):
 
 ```bash
-docker compose exec odoo python odoo-bin -c /etc/odoo/odoo.conf -d YOUR_DB -u MODULE_NAME --stop-after-init
+docker compose exec odoo python odoo-bin -c /etc/odoo/odoo.conf -d TEST1 -u MODULE_NAME --stop-after-init
 ```
 
 Restart Odoo if the server was not stopped for the upgrade.

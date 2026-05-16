@@ -18,17 +18,13 @@
     }
 }
 
-/* Pin sits on the Kanban article (same containing block as web.KanbanRecordMenu ⋮). */
+/* Pin: same base classes as web.KanbanRecordMenu ⋮ (`btn o-no-caret rounded-0 px-1`) + `dropdown-toggle` with `o-no-caret` (Odoo ui.scss) so padding matches the real trigger. */
 .o_kanban_view.o_modules_kanban .o_kanban_renderer .o_kanban_record.position-relative .o_apps_pins_kanban_pin {
     position: absolute;
-    top: 0;
-    /* Leave room for .o_dropdown_kanban (ellipsis) at end-0 top-0 (~1.75rem). */
+    top: 4px;
     inset-inline-end: 1.75rem;
     z-index: 2;
-    font-size: 1rem;
     line-height: 1;
-    padding-top: 2px !important;
-    text-decoration: none !important;
 }
 
 .o_kanban_view.o_modules_kanban .o_kanban_renderer .o_kanban_record .o_apps_pins_kanban_pin--pinned {

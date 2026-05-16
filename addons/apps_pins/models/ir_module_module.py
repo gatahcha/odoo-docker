@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
+import os
 
 from odoo import _, api, fields, models
+from odoo.addons.base.models.ir_module import assert_log_admin_access
 from odoo.exceptions import UserError
 from odoo.fields import Domain
+from odoo.modules.module import Manifest
 
 _logger = logging.getLogger(__name__)
 
 MAX_PINS = 80
-MYADDS_STUB_IDS = (-10, -11, -12)
 
 
 def _domain_has_module_type_value(domain, value):
@@ -27,6 +29,15 @@ def _domain_has_module_type_value(domain, value):
                 elif vals == value:
                     return True
     return False
+
+
+def _domain_without_module_type(domain):
+    """Drop all conditions on ``module_type`` (synthetic search panel value)."""
+    if not domain:
+        return Domain.TRUE
+    return Domain(domain).map_conditions(
+        lambda cond: Domain.TRUE if cond.field_expr == 'module_type' else cond
+    )
 
 
 class IrModuleModule(models.Model):
@@ -94,6 +105,22 @@ class IrModuleModule(models.Model):
         self.invalidate_model(['is_pinned'])
 
     @api.model
+    def _apps_pins_append_names_for_user(self, user, names_to_append):
+        """Append technical module names to *user*'s pin list (dedupe, cap MAX_PINS)."""
+        if not user or not names_to_append:
+            return
+        Ir = self.sudo().with_user(user)
+        existing = list(Ir._apps_pins_get_names())
+        seen = set(existing)
+        for n in names_to_append:
+            if not isinstance(n, str) or not n or n in seen:
+                continue
+            existing.append(n)
+            seen.add(n)
+            if len(existing) >= MAX_PINS:
+                break
+        Ir._apps_pins_set_names(existing)
+
     @api.model
     def apps_toggle_pin(self, module_name):
         """Toggle pin by technical module name (for RPC from list widget)."""
@@ -109,6 +136,11 @@ class IrModuleModule(models.Model):
         self._apps_pins_set_names(names)
         return {'pinned_names': names, 'is_pinned': pinned}
 
+    @api.model
+    def apps_pins_get_home_root_menu_ids(self):
+        """RPC for /odoo home: Apps, Settings, then pinned installed app roots (always fresh)."""
+        return self.env['ir.http'].apps_pins_get_home_root_menu_ids()
+
     def action_apps_toggle_pin(self):
         """Kanban ⋮ menu: context carries module_name for virtual rows (id -1)."""
         name = self.env.context.get('module_name')
@@ -120,59 +152,64 @@ class IrModuleModule(models.Model):
         self.env['ir.module.module'].apps_toggle_pin(name)
         return {'type': 'ir.actions.client', 'tag': 'soft_reload'}
 
-    def _apps_pins_myadds_stub_dicts(self, fields_list):
-        stubs = [
-            {
-                'id': MYADDS_STUB_IDS[0],
-                'name': 'apps_pins_whatsapp_stub',
-                'shortdesc': _('WhatsApp integration (stub)'),
-                'summary': _('Placeholder entry for a future WhatsApp connector.'),
-                'author': 'My Adds',
-                'website': '',
-                'state': 'uninstallable',
-                'module_type': 'myadds',
-                'application': True,
-                'is_pinned': False,
-            },
-            {
-                'id': MYADDS_STUB_IDS[1],
-                'name': 'apps_pins_barcode_stub',
-                'shortdesc': _('Barcode utilities (stub)'),
-                'summary': _('Placeholder entry for barcode-related tools.'),
-                'author': 'My Adds',
-                'website': '',
-                'state': 'uninstallable',
-                'module_type': 'myadds',
-                'application': True,
-                'is_pinned': False,
-            },
-            {
-                'id': MYADDS_STUB_IDS[2],
-                'name': 'apps_pins_custom_reports_stub',
-                'shortdesc': _('Custom reports pack (stub)'),
-                'summary': _('Placeholder for user-specific reporting add-ons.'),
-                'author': 'My Adds',
-                'website': '',
-                'state': 'uninstallable',
-                'module_type': 'myadds',
-                'application': True,
-                'is_pinned': False,
-            },
-        ]
-        keys = set(fields_list or []) | {'id', 'name'}
-        out = []
-        for row in stubs:
-            out.append({k: row[k] for k in keys if k in row})
-        return out
+    @api.model
+    def _apps_pins_core_addons_root(self):
+        """Normcased addons root that hosts core ``web`` (non–extra-addons)."""
+        web_m = Manifest.for_addon('web', display_warning=False)
+        if not web_m:
+            return None
+        return os.path.normcase(web_m.addons_path)
+
+    @api.model
+    def _apps_pins_myadds_module_names(self):
+        """Technical names of application modules loaded from an extra addons root."""
+        core = self._apps_pins_core_addons_root()
+        if core is None:
+            _logger.debug('apps_pins My Adds: no web manifest, returning empty set')
+            return frozenset()
+        names = []
+        for mod in self.sudo().search([('application', '=', True)]):
+            manifest = Manifest.for_addon(mod.name, display_warning=False)
+            if not manifest:
+                continue
+            app_flag = manifest.raw_value('application')
+            if app_flag is None:
+                app_flag = mod.application
+            if not app_flag:
+                continue
+            if os.path.normcase(manifest.addons_path) != core:
+                names.append(mod.name)
+        return frozenset(names)
+
+    @assert_log_admin_access
+    def button_immediate_install(self):
+        """Pin application modules selected for install (UI path only).
+
+        Installs started via ``odoo-bin -i`` / registry init do not call this
+        method, so they are not auto-pinned here.
+        """
+        uid = self.env.uid
+        requested = self.filtered(lambda m: m.application).mapped('name')
+        res = super().button_immediate_install()
+        if requested:
+            Ir = self.env['ir.module.module'].sudo().with_user(self.env['res.users'].browse(uid))
+            installed = Ir.search([
+                ('name', 'in', list(requested)),
+                ('application', '=', True),
+                ('state', '=', 'installed'),
+            ]).mapped('name')
+            self.env['ir.module.module']._apps_pins_append_names_for_user(
+                self.env['res.users'].browse(uid),
+                installed,
+            )
+        return res
 
     @api.model
     def web_search_read(self, domain, specification, offset=0, limit=None, order=None, count_limit=None):
         if _domain_has_module_type_value(domain, 'myadds'):
-            records = self._apps_pins_myadds_stub_dicts(list(specification.keys()))
-            return {
-                'length': len(records),
-                'records': records[offset: offset + (limit or len(records))],
-            }
+            return self._web_search_read_myadds(
+                domain, specification, offset=offset, limit=limit, order=order, count_limit=count_limit,
+            )
 
         if _domain_has_module_type_value(domain, 'pinned'):
             return self._web_search_read_pinned(
@@ -180,6 +217,21 @@ class IrModuleModule(models.Model):
             )
 
         return super().web_search_read(domain, specification, offset=offset, limit=limit, order=order, count_limit=count_limit)
+
+    @api.model
+    def _web_search_read_myadds(self, domain, specification, offset=0, limit=None, order=None, count_limit=None):
+        myadds_names = self._apps_pins_myadds_module_names()
+        if not myadds_names:
+            return {'length': 0, 'records': []}
+        inner = _domain_without_module_type(domain)
+        merged = inner & Domain('name', 'in', tuple(myadds_names))
+        merged_domain = list(merged.optimize_full(self))
+        res = super().web_search_read(
+            merged_domain, specification, offset=offset, limit=limit, order=order, count_limit=count_limit,
+        )
+        for row in res.get('records') or []:
+            row['module_type'] = 'myadds'
+        return res
 
     def _web_search_read_pinned(self, domain, specification, offset=0, limit=None, order=None, count_limit=None):
         pin_order = self._apps_pins_get_names()

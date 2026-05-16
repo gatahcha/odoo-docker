@@ -4,7 +4,7 @@ The **Apps Pins and My Adds** module (`apps_pins`) customizes the Odoo **Apps** 
 
 **Technical name:** `apps_pins`  
 **Declared version:** 19.0.x (see `addons/apps_pins/__manifest__.py`)  
-**Dependencies:** `base`, `base_import_module`, `web`
+**Dependencies:** `base`, `base_import_module`, `web`, `web_apps_home`
 
 ## What it does
 
@@ -43,6 +43,7 @@ Official remote rows may have `module_type` normalized for display (for example 
 
 | Location | Behavior |
 |----------|------------|
+| `/odoo` home (`web_apps_home`, extended by this module) | Welcome line, user chip (avatar + name), top-left app switcher (same idea as the main navbar apps control), then the app grid. After pulls that touch the launcher, upgrade **`web_apps_home`** and **`apps_pins`** if your workflow only bumps one module. |
 | Apps list | Column on `is_pinned` with OWL widget **`apps_pin`** (thumb icon); click toggles pin and soft-reloads. |
 | Apps Kanban | Pin button on the card; dropdown menu entry **Toggle pin** (both use `action_apps_toggle_pin` with `module_name` in context). |
 | Search panel / default action | Inherited Apps action sets default context so Apps opens with **Pinned** as the default module type filter. |
@@ -56,6 +57,7 @@ Backend assets registered in the manifest:
 - `apps_pins/static/src/scss/apps_pins.scss`
 - `apps_pins/static/src/fields/apps_pin_field.js`
 - `apps_pins/static/src/fields/apps_pin_field.xml`
+- `apps_pins/static/src/web_apps_home/apps_home_pinned.js`
 
 After changes, upgrade the module and refresh assets as you normally would for Odoo web changes.
 
@@ -67,7 +69,7 @@ After changes, upgrade the module and refresh assets as you normally would for O
 After pulling code updates for this module:
 
 ```bash
-docker compose exec odoo python odoo-bin -c /etc/odoo/odoo.conf -d YOUR_DB -u apps_pins --stop-after-init
+docker compose exec odoo python odoo-bin -c /etc/odoo/odoo.conf -d TEST1 -u apps_pins --stop-after-init
 ```
 
 The manifest summary also reminds operators to upgrade with **`-u apps_pins`** after pulls when behavior changes.
