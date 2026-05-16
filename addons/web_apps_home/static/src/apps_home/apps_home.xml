@@ -2,27 +2,6 @@
 <templates xml:space="preserve">
   <t t-name="web_apps_home.AppsHome">
     <div class="o_web_apps_home h-100 w-100 d-flex flex-column user-select-none overflow-hidden">
-      <header class="o_web_apps_home_topbar d-flex align-items-center justify-content-between px-2 py-2 border-bottom bg-view">
-        <button
-          type="button"
-          class="o_web_apps_home_apps_btn btn btn-link text-decoration-none p-2 rounded-0"
-          t-on-click="() => this.onAppSwitcherClick()"
-          t-att-title="appSwitcherTitle"
-          t-att-aria-label="appSwitcherTitle"
-        >
-          <i t-if="ui.isSmall" class="fa fa-bars fa-lg" aria-hidden="true"/>
-          <i t-else="" class="oi oi-apps" aria-hidden="true"/>
-        </button>
-        <div class="o_web_apps_home_user d-flex align-items-center gap-2 pe-1">
-          <img
-            t-if="userAvatarUrl"
-            t-att-src="userAvatarUrl"
-            class="o_web_apps_home_avatar rounded-circle"
-            alt=""
-          />
-          <span class="o_web_apps_home_user_name small fw-semibold" t-esc="userName"/>
-        </div>
-      </header>
       <div class="o_web_apps_home_main flex-grow-1 overflow-auto d-flex flex-column align-items-center justify-content-center p-4">
         <p class="o_web_apps_home_welcome text-center mb-4 mb-md-5" t-esc="welcomeMessage"/>
         <div t-if="!state.apps.length" class="text-muted text-center" t-esc="emptyLabel"/>

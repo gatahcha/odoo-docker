@@ -1,0 +1,19 @@
+// Shared surface for `/odoo` launcher body + launcher navbar (keep in sync).
+$o-apps-home-surface-1: #e8e0f5;
+$o-apps-home-surface-2: #dce8f8;
+$o-apps-home-surface-3: #f0e8f8;
+$o-apps-home-surface-angle: 135deg;
+
+@mixin o-apps-home-surface-gradient($attachment: fixed) {
+    // Stock `.o_main_navbar { background: $o-navbar-background }` leaves a solid purple
+    // `background-color`. `.o_menu_systray` uses `bg-inherit` → inherits that color and paints
+    // an opaque strip. Clear color so inherit + transparent children show the gradient.
+    background-color: transparent !important;
+    background-image: linear-gradient(
+        $o-apps-home-surface-angle,
+        $o-apps-home-surface-1 0%,
+        $o-apps-home-surface-2 45%,
+        $o-apps-home-surface-3 100%
+    );
+    background-attachment: $attachment;
+}

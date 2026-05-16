@@ -61,23 +61,30 @@ This project runs a local Odoo source checkout in Docker. Treat `odoo/` as upstr
 
 Use this when you pull or edit custom addons and need the running instance to match.
 
+**No `compose down` for routine restarts:** To apply addon updates you do **not** need `docker compose down`. Upgrade the changed module(s) against the DB, then restart the long-running Odoo service:
+
+```bash
+docker compose exec odoo python odoo-bin -c /etc/odoo/odoo.conf -d TEST1 -u apps_pins,web_apps_home --stop-after-init --http-port=8077
+docker compose restart odoo
+```
+
+Replace the **`-u`** argument with a comma-separated list of every custom module you changed (examples: `apps_pins`, `web_apps_home`, or both). Reserve **`docker compose down`** (or **`down -v`**) for Compose config changes, image rebuilds from scratch, or when you intentionally want to remove containers/volumes—not for normal “reload my code” cycles.
+
+Upgrade **`odoo-bin`** invocations use **`--http-port=8077`** so the short-lived process does not try to bind **8069** (already used by the long-running Odoo service). If **`exec`** still fails, use **`docker compose run --rm odoo …`** with the same flags (see step 2).
+
 **Database name:** This workspace defaults to **`TEST1`** (`POSTGRES_DB` in `.env`, `db_name` in `config/odoo.conf`). Use **`-d TEST1`** in `odoo-bin` examples so upgrades match the DB in the browser (`?db=TEST1` if relevant). If your Postgres volume was created with another name, create **`TEST1`** in Odoo / Postgres or align `.env` with the database you actually use.
 
 **`compose run` vs long-running `odoo`:** `docker compose run --rm odoo … --stop-after-init` starts a **one-off** container, upgrades the DB, then exits. The **`docker compose up`** Odoo service keeps running with **its own worker processes** until restarted. After any `-u` that must show in the browser, run **`docker compose restart odoo`** (especially when **`workers` > 0**). A browser hard refresh alone does not replace that.
-
-**Port conflict:** `docker compose exec odoo python odoo-bin …` while the main Odoo is already bound to **8069** can fail with “address already in use”. Prefer a **one-off upgrade**:
-
-`docker compose run --rm odoo python odoo-bin -c /etc/odoo/odoo.conf -d TEST1 -u web_apps_home,apps_pins --stop-after-init`
-
-then **`docker compose restart odoo`**. Alternatively use a free **`--http-port`** (e.g. `8077`) on a second `odoo-bin` if you must use `exec`.
 
 1. **Rebuild the image** (only if `Dockerfile`, `requirements`, or non-mounted build context changed):  
    `docker compose build odoo` then `docker compose up -d odoo`
 
 2. **Upgrade the module(s)** (applies XML data, manifest deps, regenerates asset attachments, reloads registry for that process—**required** for most Python/view/asset manifest changes):  
-   One-off (recommended):  
-   `docker compose run --rm odoo python odoo-bin -c /etc/odoo/odoo.conf -d TEST1 -u web_apps_home,apps_pins --stop-after-init`  
-   Include **`web_apps_home`** whenever launcher XML/JS/SCSS changed; include **`apps_pins`** when that module changed.
+   From the running stack (no `compose down`):  
+   `docker compose exec odoo python odoo-bin -c /etc/odoo/odoo.conf -d TEST1 -u web_apps_home,apps_pins --stop-after-init --http-port=8077`  
+   If **`exec`** still fails, use a one-off instead:  
+   `docker compose run --rm odoo python odoo-bin -c /etc/odoo/odoo.conf -d TEST1 -u web_apps_home,apps_pins --stop-after-init --http-port=8077`  
+   Include **`web_apps_home`** whenever launcher XML/JS/SCSS changed; include **`apps_pins`** when that module changed. Adjust the **`-u`** list to match the modules you edited.
 
 3. **Restart the long-running Odoo service** after upgrades so all workers and clients see the same registry and assets:  
    `docker compose restart odoo`

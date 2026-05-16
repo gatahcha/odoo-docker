@@ -1,40 +1,6 @@
 .o_web_apps_home {
-    min-height: 100%;
-    background: linear-gradient(135deg, #e8e0f5 0%, #dce8f8 45%, #f0e8f8 100%);
-}
-
-.o_web_apps_home_topbar {
-    flex: 0 0 auto;
-    z-index: 1;
-    background-color: transparent !important;
-}
-
-.o_web_apps_home_apps_btn {
-    color: var(--o-navbar-text-color, #714b67);
-
-    &:hover,
-    &:focus-visible {
-        color: var(--o-navbar-text-color, #5a3a52);
-        background-color: rgba(0, 0, 0, 0.04);
-    }
-
-    .oi,
-    .fa {
-        vertical-align: middle;
-    }
-}
-
-.o_web_apps_home_user_name {
-    max-width: 12rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.o_web_apps_home_avatar {
-    width: 2rem;
-    height: 2rem;
-    object-fit: cover;
+    min-height: calc(100dvh - var(--o-navbar-height, 46px));
+    @include o-apps-home-surface-gradient(fixed);
 }
 
 .o_web_apps_home_main {

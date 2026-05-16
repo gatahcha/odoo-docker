@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+  <t t-inherit="web.NavBar" t-inherit-mode="extension">
+    <xpath expr="//header[hasclass('o_navbar')]" position="attributes">
+      <attribute name="t-att-class">{'o_web_apps_home_navbar_launcher': isWebAppsLauncher}</attribute>
+    </xpath>
+  </t>
+
+  <t t-inherit="web.NavBar.AppsMenu" t-inherit-mode="extension">
+    <xpath expr="//div[hasclass('o_navbar_apps_menu')]" position="attributes">
+      <attribute name="class" add="d-flex align-items-center flex-shrink-0" separator=" "/>
+    </xpath>
+    <xpath expr="//div[hasclass('o_navbar_apps_menu')]/Dropdown" position="replace">
+      <button
+        type="button"
+        class="dropdown-toggle border-0 rounded-0"
+        data-hotkey="h"
+        title="Home Menu"
+        t-on-click.stop="_openAppMenuSidebar"
+      >
+        <i class="oi oi-apps" aria-hidden="true"/>
+      </button>
+      <a
+        href="/odoo"
+        class="o_web_apps_home_nav_cubes btn border-0 rounded-0 text-reset d-flex align-items-center justify-content-center"
+        t-on-click.prevent="onAppsHomeCubesClick"
+        t-att-title="appsHomeCubesTitle"
+        t-att-aria-label="appsHomeCubesTitle"
+      >
+        <i class="fa fa-cubes fa-lg" aria-hidden="true"/>
+      </a>
+      <t t-call="web.NavBar.AppsMenu.Sidebar"/>
+    </xpath>
+  </t>
+
+  <t t-inherit="web.NavBar.AppsMenu.Sidebar" t-inherit-mode="extension">
+    <xpath expr="//i[hasclass('fa-bars')]" position="replace">
+      <i t-if="this.ui.isSmall" class="fa fa-bars" aria-hidden="true"/>
+    </xpath>
+    <xpath expr="//div[hasclass('modal-backdrop')]" position="attributes">
+      <attribute name="class">modal-backdrop show d-block</attribute>
+    </xpath>
+  </t>
+
+</templates>

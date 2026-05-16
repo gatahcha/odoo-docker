@@ -1,0 +1,58 @@
+// Launcher navbar: same gradient as apps home, viewport-fixed so the seam with `.o_web_apps_home` is continuous.
+header.o_navbar.o_web_apps_home_navbar_launcher .o_main_navbar {
+    @include o-apps-home-surface-gradient(fixed);
+    border-bottom: transparent !important;
+    color: #4c3d5c;
+
+    // Belt-and-suspenders: systray has `bg-inherit` (background-color only).
+    .o_menu_systray {
+        background-color: transparent !important;
+    }
+
+    .o_menu_systray,
+    .o_navbar_apps_menu {
+        color: inherit;
+    }
+
+    .dropdown-toggle,
+    .o_web_apps_home_nav_cubes {
+        color: inherit;
+    }
+
+    .o_menu_brand {
+        color: inherit;
+    }
+
+    .o_navbar_apps_menu .dropdown-toggle:hover,
+    .o_navbar_apps_menu .dropdown-toggle:focus-visible {
+        background: rgba(113, 75, 103, 0.1);
+    }
+
+    .o_web_apps_home_nav_cubes:hover,
+    .o_web_apps_home_nav_cubes:focus-visible {
+        background: rgba(113, 75, 103, 0.1) !important;
+    }
+}
+
+// Mock company logo beside the app switcher (navbar entry feel)
+.o_main_navbar .o_web_apps_home_nav_cubes {
+    --NavBar-entry-padding-left: 0.25rem;
+    --NavBar-entry-padding-right: 0.25rem;
+    min-width: 2.25rem;
+    font-size: var(--o-navbar-brand-font-size, 1.125rem);
+
+    &:hover,
+    &:focus-visible {
+        background: var(--NavBar-entry-backgroundColor--hover, rgba(255, 255, 255, 0.08));
+        color: inherit;
+    }
+
+    &:focus-visible {
+        outline: 2px solid rgba(255, 255, 255, 0.35);
+        outline-offset: -2px;
+    }
+}
+
+header.o_navbar.o_web_apps_home_navbar_launcher .o_main_navbar .o_web_apps_home_nav_cubes:focus-visible {
+    outline-color: rgba(113, 75, 103, 0.45);
+}

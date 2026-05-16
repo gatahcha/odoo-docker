@@ -13,6 +13,9 @@ class IrHttp(models.AbstractModel):
         # Initial payload; home screen still calls apps_pins_get_home_root_menu_ids() via RPC
         # so pins after login appear without requiring a new session.
         result['apps_pins_home_menu_ids'] = self.apps_pins_get_home_root_menu_ids()
+        act = self.env.ref('base.open_module_tree', raise_if_not_found=False)
+        if act:
+            result['apps_open_module_tree_action_id'] = act.id
         return result
 
     @api.model
